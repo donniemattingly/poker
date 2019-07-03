@@ -10,6 +10,7 @@ defmodule Poker.Table do
       %{name: "p1", chips: 100, table_position: 0},
       %{name: "p2", chips: 100, table_position: 1}
     ]
+
     community_cards = []
     button = 0
     deck = Poker.Deck.shuffle()
@@ -43,5 +44,5 @@ defmodule Poker.Table do
 end
 
 defmodule Player do
-  defstruct [:name, :stack, :cards,]
+  defstruct [:name, :stack, :cards]
 end

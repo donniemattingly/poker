@@ -20,10 +20,11 @@ defmodule Poker.Deck do
   def deal(deck, players, num_cards) do
     {to_deal, remaining} = deck |> Enum.split(length(players) * num_cards)
     hands = Enum.chunk_every(to_deal, num_cards)
-    players_with_hands = Enum.zip(players, hands)
-    |> Enum.map(fn({player, hand}) -> Map.put(player, :hand, hand) end)
+
+    players_with_hands =
+      Enum.zip(players, hands)
+      |> Enum.map(fn {player, hand} -> Map.put(player, :hand, hand) end)
 
     {players_with_hands, remaining}
   end
-
 end

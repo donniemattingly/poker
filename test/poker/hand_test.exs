@@ -12,6 +12,10 @@ defmodule Poker.HandTest do
   end
 
   test "convert shorthand" do
-    assert Poker.Hand.convert_shorthand(["5S", "TD", "KC"]) == [{5, :spades}, {10, :diamonds}, {:k, :clubs}]
+    assert Hand.from_shorthand(~w"5S TD KC") == [
+             {5, :spades},
+             {10, :diamonds},
+             {:k, :clubs}
+           ]
   end
 end
