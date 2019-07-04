@@ -95,8 +95,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/lib/poker/hand.ex">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="229">
-                  <caret line="193" column="31" selection-start-line="193" selection-start-column="31" selection-end-line="193" selection-end-column="31" />
+                <state relative-caret-position="165">
+                  <caret line="228" column="20" lean-forward="true" selection-start-line="228" selection-start-column="20" selection-end-line="228" selection-end-column="20" />
                 </state>
               </provider>
             </entry>
@@ -108,8 +108,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/test/poker/hand_test.exs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="405">
-                  <caret line="27" column="30" selection-start-line="27" selection-start-column="30" selection-end-line="27" selection-end-column="30" />
+                <state relative-caret-position="227">
+                  <caret line="30" selection-start-line="30" selection-end-line="31" />
                 </state>
               </provider>
             </entry>
@@ -141,8 +141,8 @@
         <option value="$PROJECT_DIR$/test/poker_test.exs" />
         <option value="$PROJECT_DIR$/test/poker/deck_test.exs" />
         <option value="$PROJECT_DIR$/lib/poker/deck.ex" />
-        <option value="$PROJECT_DIR$/lib/poker/hand.ex" />
         <option value="$PROJECT_DIR$/test/poker/hand_test.exs" />
+        <option value="$PROJECT_DIR$/lib/poker/hand.ex" />
       </list>
     </option>
   </component>
@@ -232,11 +232,10 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="20935000" />
+    <option name="totallyTimeSpent" value="29981000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="54" y="23" width="1487" height="1027" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.14117648" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -325,17 +324,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/poker/hand.ex">
+    <entry file="file://$PROJECT_DIR$/test/poker/hand_test.exs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="193" column="31" selection-start-line="193" selection-start-column="31" selection-end-line="193" selection-end-column="31" />
+        <state relative-caret-position="227">
+          <caret line="30" selection-start-line="30" selection-end-line="31" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/poker/hand_test.exs">
+    <entry file="file://$PROJECT_DIR$/lib/poker/hand.ex">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" column="30" selection-start-line="27" selection-start-column="30" selection-end-line="27" selection-end-column="30" />
+        <state relative-caret-position="165">
+          <caret line="228" column="20" lean-forward="true" selection-start-line="228" selection-start-column="20" selection-end-line="228" selection-end-column="20" />
         </state>
       </provider>
     </entry>

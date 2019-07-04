@@ -39,6 +39,35 @@ defmodule Poker.Hand do
     Enum.map(hand, &from_shorthand(&1))
   end
 
+  def to_shorthand(hand) do
+    inverted =
+      @shorthand_mappings
+      |> Map.to_list()
+      |> Map.new(fn {k, v} -> {v, k} end)
+
+    hand
+    |> Enum.map(
+         fn {rank, suit} ->
+           rankStr =
+             case Map.get(inverted, rank) do
+               nil -> rank
+               x -> x
+             end
+
+           suitStr =
+             case suit do
+               :diamonds -> "D"
+               :hearts -> "H"
+               :spades -> "S"
+               :clubs -> "C"
+             end
+
+           "#{rankStr}#{suitStr}"
+         end
+       )
+    |> Enum.join(" ")
+  end
+
   def from_shorthand(hand) do
     [rank | [suit | _]] =
       String.graphemes(hand)
@@ -61,7 +90,6 @@ defmodule Poker.Hand do
   """
   def score_hand do
   end
-
 
   @doc """
   Converts rank (which is either an atom or an int) to an int (ace high)
@@ -90,6 +118,8 @@ defmodule Poker.Hand do
   """
   def score_by_rank(hand) do
     Enum.group_by(hand, &Kernel.elem(&1, 0))
+    |> Map.to_list()
+    |> Enum.sort(&sort_groups(&1, &2))
     |> score_groups_by_rank
   end
 
@@ -130,10 +160,17 @@ defmodule Poker.Hand do
   """
   def score_groups_by_rank(groups) do
     [g1 | [g2 | _]] = groups
-    l1 = elem(g1, 1)
-         |> length
-    l2 = elem(g2, 1)
-         |> length
+
+    l1 =
+      elem(g1, 1)
+      |> length
+
+    l2 =
+      elem(g2, 1)
+      |> length
+
+
+      IO.puts("l1: #{l1} l2: #{l2}")
 
     case {l1, l2} do
       {4, _} -> score_quads(groups)
@@ -145,38 +182,113 @@ defmodule Poker.Hand do
     end
   end
 
+  def get_hand(groups, kickers)
+
   def score_quads([quads | kickers]) do
+    selected_kickers =
+      kickers
+      |> Enum.take(1)
+
     {
       @hand_primary_values.quads,
       elem(quads, 0)
       |> normalize_rank,
-      kickers
-      |> Enum.flat_map(&Kernel.elem(&1, 1))
-      |> score_kickers
+      selected_kickers
+      |> cards_to_comparable_int,
+      [quads] ++ selected_kickers
+      |> Enum.flat_map(&elem(&1, 1))
     }
   end
 
-  def score_full_house(groups) do
+  @doc """
+    only differentiation between full houses is the
+    type of trip and pair, so no value for kicker score
+  """
+  def score_full_house([trips | [pair | kickers]]) do
     {
-    @hand_primary_values.full_house,
-
+      @hand_primary_values.full_house,
+      [trips, pair]
+      |> cards_to_comparable_int,
+      0,
+      [trips, pair]
+      |> Enum.map(&elem(&1, 1))
     }
   end
 
-  def score_trips(groups) do
+  @doc """
+    use rank of trips for comparision
+    use two best kickers
+  """
+  def score_trips([trips | kickers]) do
+    selected_kickers =
+      kickers
+      |> Enum.take(2)
 
+    {
+      @hand_primary_values.set,
+      elem(trips, 0)
+      |> normalize_rank,
+      selected_kickers
+      |> cards_to_comparable_int,
+      [trips] ++ selected_kickers
+      |> Enum.flat_map(&elem(&1, 1))
+    }
   end
 
-  def score_two_pair(groups) do
+  @doc """
+    rank of each pair matters
+    use one kicker
+  """
+  def score_two_pair([p1 | [p2 | kickers]]) do
+    selected_kickers =
+      kickers
+      |> Enum.take(1)
 
+    {
+      @hand_primary_values.two_pair,
+      [p1, p2]
+      |> cards_to_comparable_int,
+      selected_kickers
+      |> cards_to_comparable_int,
+      [p1, p2] ++ selected_kickers
+      |> Enum.flat_map(&elem(&1, 1))
+    }
   end
 
-  def score_pair(groups) do
+  @doc """
+  three kickers, rank of pair matters
+  """
+  def score_pair([pair | kickers]) do
+    selected_kickers =
+      kickers
+      |> Enum.take(3)
 
+    {
+      @hand_primary_values.pair,
+      elem(pair, 0)
+      |> normalize_rank,
+      selected_kickers
+      |> cards_to_comparable_int,
+
+      [pair] ++ selected_kickers |> Enum.flat_map(&elem(&1, 1))
+    }
   end
 
+  @doc """
+    All kickers
+  """
   def score_high_card(groups) do
+    selected_kickers =
+      groups
+      |> Enum.take(5)
 
+    {
+      @hand_primary_values.high_card,
+      0,
+      selected_kickers
+      |> cards_to_comparable_int,
+      selected_kickers
+    }
   end
 
   @doc """
@@ -191,27 +303,14 @@ defmodule Poker.Hand do
     cards
     |> Enum.map(&elem(&1, 0))
     |> Enum.map(&normalize_rank(&1))
-    |> Enum.zip(length(cards)-1..0)
-    |> Enum.map(fn ({rank, n}) ->
-      rank <<< 4 * n
-    end)
-    |> Enum.sum
-  end
-
-  @doc """
-  For n kickers rank cards lowest to highest, then multiply by 0..n powers of 10
-  TODO: this will break sometimes
-  """
-  def score_kickers(cards)do
-    magnitude = length(cards)
-    cards
-    |> Enum.sort(&compare_rank(&2, &1))
-    |> Enum.map(&Kernel.elem(&1, 0))
-    |> Enum.map(&normalize_rank(&1))
-    |> Enum.zip(0..magnitude)
-    |> Enum.map(fn {rank, mag} -> rank * :math.pow(mag, 10) end)
-    |> Enum.map(&Kernel.round(&1))
-    |> Enum.sum
+    |> Enum.zip((length(cards) - 1)..0)
+    |> Enum.map(
+         fn {rank, n} ->
+           rank
+           <<< (4 * n)
+         end
+       )
+    |> Enum.sum()
   end
 end
 
