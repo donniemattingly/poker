@@ -18,4 +18,13 @@ defmodule Poker.HandTest do
              {:k, :clubs}
            ]
   end
+
+  test "comparable int" do
+    hexString = ~w"AH TD 7C"
+                |> Hand.from_shorthand
+                |> Hand.cards_to_comparable_int
+                |> Integer.to_string(16)
+
+    assert hexString === "EA7"
+  end
 end
