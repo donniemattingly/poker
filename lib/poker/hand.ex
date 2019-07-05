@@ -46,23 +46,25 @@ defmodule Poker.Hand do
       |> Map.new(fn {k, v} -> {v, k} end)
 
     hand
-    |> Enum.map(fn {rank, suit} ->
-      rankStr =
-        case Map.get(inverted, rank) do
-          nil -> rank
-          x -> x
-        end
+    |> Enum.map(
+         fn {rank, suit} ->
+           rankStr =
+             case Map.get(inverted, rank) do
+               nil -> rank
+               x -> x
+             end
 
-      suitStr =
-        case suit do
-          :diamonds -> "D"
-          :hearts -> "H"
-          :spades -> "S"
-          :clubs -> "C"
-        end
+           suitStr =
+             case suit do
+               :diamonds -> "D"
+               :hearts -> "H"
+               :spades -> "S"
+               :clubs -> "C"
+             end
 
-      "#{rankStr}#{suitStr}"
-    end)
+           "#{rankStr}#{suitStr}"
+         end
+       )
     |> Enum.join(" ")
   end
 
@@ -104,6 +106,7 @@ defmodule Poker.Hand do
   """
   def normalize_rank(r) do
     case r do
+      :al -> 1
       :j -> 11
       :q -> 12
       :k -> 13
@@ -154,25 +157,42 @@ defmodule Poker.Hand do
 
   @doc """
   Handles straight & straight flush
+
+  as a hack we add one card of ":al" or ace-low
+  to the hand per ace
   """
   def score_straight(hand) do
-    straights =
+    ace_lows =
       hand
+      |> Enum.filter(fn ({rank, suit}) -> rank == :a end)
+      |> Enum.map(fn ({:a, suit}) -> {:al, suit} end)
+
+    straights =
+      hand ++ ace_lows
       |> Enum.sort(fn {r1, _}, {r2, _} -> Poker.Hand.compare_rank(r1, r2) end)
       |> Enum.dedup_by(&elem(&1, 0))
       |> Enum.chunk_every(5, 1)
       |> Enum.filter(fn l -> length(l) == 5 end)
-      |> Enum.filter(fn l ->
-        first = Enum.at(l, 0) |> elem(0) |> normalize_rank
-        last = Enum.at(l, 4) |> elem(0) |> normalize_rank
-        first - last == 4
-      end)
+      |> Enum.filter(
+           fn l ->
+             first = Enum.at(l, 0)
+                     |> elem(0)
+                     |> normalize_rank
+             last = Enum.at(l, 4)
+                    |> elem(0)
+                    |> normalize_rank
+             first - last == 4
+           end
+         )
 
     straight_flush =
       straights
-      |> Enum.filter(fn h ->
-        1 == Enum.dedup_by(h, &elem(&1, 1)) |> length
-      end)
+      |> Enum.filter(
+           fn h ->
+             1 == Enum.dedup_by(h, &elem(&1, 1))
+                  |> length
+           end
+         )
       |> Enum.at(0)
 
     best_straight = Enum.at(straights, 0)
@@ -190,11 +210,25 @@ defmodule Poker.Hand do
       s ->
         {
           primary_score,
-          s |> Enum.at(0) |> elem(0) |> normalize_rank,
-          0,
           s
+          |> Enum.at(0)
+          |> elem(0)
+          |> normalize_rank,
+          0,
+          convert_ace_lows(s)
         }
     end
+  end
+
+  def convert_ace_lows(hand) do
+    hand
+    |> Enum.map(
+         fn ({rank, suit}) -> case rank do
+                                :al -> {:a, suit}
+                                _ -> {rank, suit}
+                              end
+         end
+       )
   end
 
   defp group_size(group) do
@@ -238,8 +272,6 @@ defmodule Poker.Hand do
       _ -> score_high_card(groups)
     end
   end
-
-  def get_hand(groups, kickers)
 
   def score_quads([quads | kickers]) do
     selected_kickers =
@@ -326,7 +358,8 @@ defmodule Poker.Hand do
       |> normalize_rank,
       selected_kickers
       |> cards_to_comparable_int,
-      ([pair] ++ selected_kickers) |> Enum.flat_map(&elem(&1, 1))
+      ([pair] ++ selected_kickers)
+      |> Enum.flat_map(&elem(&1, 1))
     }
   end
 
@@ -360,26 +393,13 @@ defmodule Poker.Hand do
     |> Enum.map(&elem(&1, 0))
     |> Enum.map(&normalize_rank(&1))
     |> Enum.zip((length(cards) - 1)..0)
-    |> Enum.map(fn {rank, n} ->
-      rank <<<
-        (4 * n)
-    end)
+    |> Enum.map(
+         fn {rank, n} ->
+           rank
+           <<< (4 * n)
+         end
+       )
     |> Enum.sum()
   end
 end
 
-defmodule Poker.Hand.Score do
-  @moduledoc """
-  Score is a struct containing a field for each possible hand w/ min defining characteristics
-
-  straight_flush - high card
-  quads - rank (kicker never matters)
-  full_house - rank1 full of rank2
-  flush - all cards needed
-  straight - high card
-  set - set_rank, kickers
-  two_pair rank1, rank2, kickers
-  pair rank, kickers
-  high_card kickers
-  """
-end

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="46054754-9e7e-4fa6-954a-a21ac3bf6079" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/poker/hand.ex" beforeDir="false" afterPath="$PROJECT_DIR$/lib/poker/hand.ex" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/classes/" />
@@ -94,8 +93,30 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/lib/poker/hand.ex">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="460">
-                  <caret line="148" column="26" selection-start-line="148" selection-start-column="26" selection-end-line="148" selection-end-column="26" />
+                <state relative-caret-position="363">
+                  <caret line="217" column="29" selection-start-line="217" selection-start-column="29" selection-end-line="217" selection-end-column="29" />
+                  <folding>
+                    <element signature="e#804#852#0" />
+                    <element signature="e#894#1372#0" />
+                    <element signature="e#1401#1717#0" />
+                    <element signature="e#1820#1860#0" />
+                    <element signature="e#1969#2110#0" />
+                    <element signature="e#2226#2344#0" />
+                    <element signature="e#2435#2512#0" />
+                    <element signature="e#2610#2751#0" />
+                    <element signature="e#2814#3243#0" />
+                    <element signature="e#4364#4405#0" />
+                    <element signature="e#4617#4782#0" />
+                    <element signature="e#4931#5308#0" />
+                    <element signature="e#5347#5637#0" />
+                    <element signature="e#5815#5989#0" />
+                    <element signature="e#6108#6396#0" />
+                    <element signature="e#6508#6805#0" />
+                    <element signature="e#6897#7178#0" />
+                    <element signature="e#7243#7449#0" />
+                    <element signature="e#7458#7652#0" />
+                    <element signature="e#7690#7897#0" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -231,7 +252,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="37469000" />
+    <option name="totallyTimeSpent" value="38920000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="54" y="23" width="1487" height="1027" extended-state="0" />
@@ -333,8 +354,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/poker/hand.ex">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="460">
-          <caret line="148" column="26" selection-start-line="148" selection-start-column="26" selection-end-line="148" selection-end-column="26" />
+        <state relative-caret-position="363">
+          <caret line="217" column="29" selection-start-line="217" selection-start-column="29" selection-end-line="217" selection-end-column="29" />
+          <folding>
+            <element signature="e#804#852#0" />
+            <element signature="e#894#1372#0" />
+            <element signature="e#1401#1717#0" />
+            <element signature="e#1820#1860#0" />
+            <element signature="e#1969#2110#0" />
+            <element signature="e#2226#2344#0" />
+            <element signature="e#2435#2512#0" />
+            <element signature="e#2610#2751#0" />
+            <element signature="e#2814#3243#0" />
+            <element signature="e#4364#4405#0" />
+            <element signature="e#4617#4782#0" />
+            <element signature="e#4931#5308#0" />
+            <element signature="e#5347#5637#0" />
+            <element signature="e#5815#5989#0" />
+            <element signature="e#6108#6396#0" />
+            <element signature="e#6508#6805#0" />
+            <element signature="e#6897#7178#0" />
+            <element signature="e#7243#7449#0" />
+            <element signature="e#7458#7652#0" />
+            <element signature="e#7690#7897#0" />
+          </folding>
         </state>
       </provider>
     </entry>
