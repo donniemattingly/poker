@@ -11,6 +11,11 @@ defmodule Poker.Deck do
     Enum.shuffle(deck)
   end
 
+  def deal_hand(size) do
+    shuffle
+    |> Enum.take(size)
+  end
+
   @doc """
   Takes a list of cards `deck`, a list of `players`, and a number (`num_cards`)
 

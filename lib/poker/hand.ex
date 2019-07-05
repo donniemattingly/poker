@@ -86,9 +86,19 @@ defmodule Poker.Hand do
   end
 
   @doc """
+  sorts hands by score
+  """
+  def compare_hand_score({p0, h0, k0, c0}, {p1, h1, k1, c1}) do
+    {p0, h0, k0} > {p1, h1, k1}
+  end
+
+  @doc """
   Takes an array of 7 cards, the `hand` and returns a score struct
   """
-  def score_hand do
+  def score_hand(hand) do
+    [score_by_rank(hand), score_by_suit(hand), score_straight(hand)]
+    |> Enum.sort(&compare_hand_score(&1, &2))
+    |> Enum.at(0)
   end
 
   @doc """
@@ -128,13 +138,15 @@ defmodule Poker.Hand do
   """
   def score_by_suit(hand) do
     groups = Enum.group_by(hand, &Kernel.elem(&1, 1))
+    {0, 0, 0, 0}
   end
 
   @doc """
-  Handles straight
+  Handles straight & straight flush
   """
   def score_straight(hand) do
     groups = Enum.group_by(hand, &Kernel.elem(&1, 0))
+    {0, 0, 0, 0}
   end
 
   defp group_size(group) do
@@ -168,9 +180,6 @@ defmodule Poker.Hand do
     l2 =
       elem(g2, 1)
       |> length
-
-
-      IO.puts("l1: #{l1} l2: #{l2}")
 
     case {l1, l2} do
       {4, _} -> score_quads(groups)
