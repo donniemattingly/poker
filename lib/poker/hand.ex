@@ -46,25 +46,23 @@ defmodule Poker.Hand do
       |> Map.new(fn {k, v} -> {v, k} end)
 
     hand
-    |> Enum.map(
-         fn {rank, suit} ->
-           rankStr =
-             case Map.get(inverted, rank) do
-               nil -> rank
-               x -> x
-             end
+    |> Enum.map(fn {rank, suit} ->
+      rankStr =
+        case Map.get(inverted, rank) do
+          nil -> rank
+          x -> x
+        end
 
-           suitStr =
-             case suit do
-               :diamonds -> "D"
-               :hearts -> "H"
-               :spades -> "S"
-               :clubs -> "C"
-             end
+      suitStr =
+        case suit do
+          :diamonds -> "D"
+          :hearts -> "H"
+          :spades -> "S"
+          :clubs -> "C"
+        end
 
-           "#{rankStr}#{suitStr}"
-         end
-       )
+      "#{rankStr}#{suitStr}"
+    end)
     |> Enum.join(" ")
   end
 
@@ -104,7 +102,7 @@ defmodule Poker.Hand do
   @doc """
   Converts rank (which is either an atom or an int) to an int (ace high)
   """
-  defp normalize_rank(r) do
+  def normalize_rank(r) do
     case r do
       :j -> 11
       :q -> 12
@@ -117,7 +115,7 @@ defmodule Poker.Hand do
   @doc """
   Comparator for sorting cards by rank (ace high)
   """
-  defp compare_rank(r1, r2) do
+  def compare_rank(r1, r2) do
     n1 = normalize_rank(r1)
     n2 = normalize_rank(r2)
     n2 <= n1
@@ -137,16 +135,66 @@ defmodule Poker.Hand do
   Handles flushes
   """
   def score_by_suit(hand) do
-    groups = Enum.group_by(hand, &Kernel.elem(&1, 1))
-    {0, 0, 0, 0}
+    {suit, selected_hand} =
+      Enum.group_by(hand, &Kernel.elem(&1, 1))
+      |> Enum.group_by(&Kernel.elem(&1, 1))
+      |> Enum.sort(&Poker.Hand.sort_groups(&1, &2))
+      |> Enum.at(0)
+
+    case length(selected_hand) do
+      5 -> {
+             @hand_primary_values.flush,
+             cards_to_comparable_int(selected_hand),
+             0,
+             selected_hand
+           }
+      _ -> {0, 0, 0, 0}
+    end
   end
 
   @doc """
   Handles straight & straight flush
   """
   def score_straight(hand) do
-    groups = Enum.group_by(hand, &Kernel.elem(&1, 0))
-    {0, 0, 0, 0}
+    straights =
+      hand
+      |> Enum.sort(fn {r1, _}, {r2, _} -> Poker.Hand.compare_rank(r1, r2) end)
+      |> Enum.dedup_by(&elem(&1, 0))
+      |> Enum.chunk_every(5, 1)
+      |> Enum.filter(fn l -> length(l) == 5 end)
+      |> Enum.filter(fn l ->
+        first = Enum.at(l, 0) |> elem(0) |> normalize_rank
+        last = Enum.at(l, 4) |> elem(0) |> normalize_rank
+        first - last == 4
+      end)
+
+    straight_flush =
+      straights
+      |> Enum.filter(fn h ->
+        1 == Enum.dedup_by(h, &elem(&1, 1)) |> length
+      end)
+      |> Enum.at(0)
+
+    best_straight = Enum.at(straights, 0)
+
+    {primary_score, selected_hand} =
+      case straight_flush do
+        nil -> {@hand_primary_values.straight, best_straight}
+        sf -> {@hand_primary_values.straight_flush, sf}
+      end
+
+    case selected_hand do
+      nil ->
+        {0, 0, 0, 0}
+
+      s ->
+        {
+          primary_score,
+          s |> Enum.at(0) |> elem(0) |> normalize_rank,
+          0,
+          s
+        }
+    end
   end
 
   defp group_size(group) do
@@ -204,7 +252,7 @@ defmodule Poker.Hand do
       |> normalize_rank,
       selected_kickers
       |> cards_to_comparable_int,
-      [quads] ++ selected_kickers
+      ([quads] ++ selected_kickers)
       |> Enum.flat_map(&elem(&1, 1))
     }
   end
@@ -239,7 +287,7 @@ defmodule Poker.Hand do
       |> normalize_rank,
       selected_kickers
       |> cards_to_comparable_int,
-      [trips] ++ selected_kickers
+      ([trips] ++ selected_kickers)
       |> Enum.flat_map(&elem(&1, 1))
     }
   end
@@ -259,7 +307,7 @@ defmodule Poker.Hand do
       |> cards_to_comparable_int,
       selected_kickers
       |> cards_to_comparable_int,
-      [p1, p2] ++ selected_kickers
+      ([p1, p2] ++ selected_kickers)
       |> Enum.flat_map(&elem(&1, 1))
     }
   end
@@ -278,8 +326,7 @@ defmodule Poker.Hand do
       |> normalize_rank,
       selected_kickers
       |> cards_to_comparable_int,
-
-      [pair] ++ selected_kickers |> Enum.flat_map(&elem(&1, 1))
+      ([pair] ++ selected_kickers) |> Enum.flat_map(&elem(&1, 1))
     }
   end
 
@@ -313,12 +360,10 @@ defmodule Poker.Hand do
     |> Enum.map(&elem(&1, 0))
     |> Enum.map(&normalize_rank(&1))
     |> Enum.zip((length(cards) - 1)..0)
-    |> Enum.map(
-         fn {rank, n} ->
-           rank
-           <<< (4 * n)
-         end
-       )
+    |> Enum.map(fn {rank, n} ->
+      rank <<<
+        (4 * n)
+    end)
     |> Enum.sum()
   end
 end
