@@ -144,7 +144,7 @@ defmodule Poker.Hand do
       |> Enum.sort(&Poker.Hand.sort_groups(&1, &2))
       |> Enum.at(0)
 
-    case length(selected_hand) do
+    result = case length(selected_hand) do
       5 -> {
              @hand_primary_values.flush,
              cards_to_comparable_int(selected_hand),
@@ -153,6 +153,8 @@ defmodule Poker.Hand do
            }
       _ -> {0, 0, 0, 0}
     end
+
+    result
   end
 
   @doc """

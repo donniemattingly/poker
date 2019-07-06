@@ -9,7 +9,7 @@ defmodule Poker.Simulate do
     Task.async_stream(
       0..sample_size,
       fn _ ->
-        Poker.Deck.deal_hand(7)
+        Poker.Deck.deal(7)
         |> Poker.Hand.score_hand end
     )
     |> Enum.map(&elem(&1, 1))
@@ -22,7 +22,7 @@ defmodule Poker.Simulate do
   def get_random_hands_of_type(type, amount) do
     Stream.cycle(0..1)
     |> Stream.map(fn _ ->
-      Poker.Deck.deal_hand(7)
+      Poker.Deck.deal(7)
       |> Poker.Hand.score_hand end)
     |> Stream.filter(fn ({r, _, _, _}) -> r == type end)
     |> Enum.take(amount)
