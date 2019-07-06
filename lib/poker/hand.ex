@@ -138,7 +138,7 @@ defmodule Poker.Hand do
   Handles flushes
   """
   def score_by_suit(hand) do
-    {suit, selected_hand} =
+    {selected_hand, suited_group} =
       Enum.group_by(hand, &Kernel.elem(&1, 1))
       |> Enum.group_by(&Kernel.elem(&1, 1))
       |> Enum.sort(&Poker.Hand.sort_groups(&1, &2))
@@ -299,8 +299,8 @@ defmodule Poker.Hand do
       [trips, pair]
       |> cards_to_comparable_int,
       0,
-      [trips, pair]
-      |> Enum.map(&elem(&1, 1))
+      [trips,pair]
+      |> Enum.flat_map(&elem(&1, 1))
     }
   end
 
