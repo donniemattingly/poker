@@ -1,7 +1,5 @@
-defmodule Player do
+defmodule Poker.Player do
   @moduledoc false
-  
-
 
   use GenServer
 
