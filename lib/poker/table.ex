@@ -70,7 +70,7 @@ defmodule Poker.Table do
   Additionally, every action request (game state update) sent to the player is accompanied by a `send_after` call from
   the table process to itself acting as a time limit on player action. If the player does not act before their time
   expires the default action given the game state will be taken on the players behalf. (Default action is check if valid
-  or a fold otherwise).\
+  or a fold otherwise).
   """
   use GenServer
 

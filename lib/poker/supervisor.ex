@@ -7,7 +7,8 @@ defmodule Poker.Supervisor do
 
   def init(:ok) do
     children = [
-      {Poker.Table, name: Poker.Table},
+      {Registry, keys: :unique, name: :account_process_registry},
+#      {Poker.Table, name: Poker.Table},
       {DynamicSupervisor, name: Poker.PlayerSupervisor, strategy: :one_for_one}
     ]
 
