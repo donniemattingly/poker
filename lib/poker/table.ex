@@ -26,7 +26,7 @@ defmodule Poker.Table do
   ### Betting rounds
 
   Betting rounds consist of one or more subrounds, where each subround is started either by the big blind, the first
-  player to act, or any act that raises the current rounds bet. A subround is really just a position at the table where
+  player to act, or any act that raises the current round's bet. A subround is really just a position at the table where
   the betting round ends when the player directly counter-clockwise of the subround starting player finishes their
   action.
 
@@ -72,16 +72,41 @@ defmodule Poker.Table do
   expires the default action given the game state will be taken on the players behalf. (Default action is check if valid
   or a fold otherwise).
   """
-  use GenServer
+  use GenStateMachine
 
   alias Poker.Hand
   alias Poker.Deck
 
-  def start_link(state, opts) do
-    GenServer.start_link(__MODULE__, state, opts)
+  def handle_event(:cast, :flip, :off, data) do
+    {:next_state, :on, data + 1}
   end
 
-  def init(_opts) do
+  def handle_event(:cast, :flip, :on, data) do
+    {:next_state, :off, data}
+  end
+
+  def handle_event({:call, from}, :get_count, state, data) do
+    {:next_state, state, data, [{:reply, from, data}]}
+  end
+
+  def handle_event(_event_type, _event, state, data) do
+    IO.puts("Event")
+    {:next_state, state, data}
+  end
+
+
+  @doc """
+  state is either
+    - :waiting_for_players
+    - :hand_setup
+    - :pre_flop
+    - :flop
+    - :turn
+    - :river
+    - :showdown
+    - :hand_complete
+  """
+  def init(opts) do
     players = [
       %{name: "p1", chips: 100, table_position: 0},
       %{name: "p2", chips: 100, table_position: 1},
@@ -90,21 +115,19 @@ defmodule Poker.Table do
       %{name: "p5", chips: 100, table_position: 4},
       %{name: "p6", chips: 100, table_position: 5}
     ]
+    |> Enum.map(fn(player) -> {player.name, player} end)
+    |> Map.new
+
 
     community_cards = []
     button = 0
     deck = Poker.Deck.shuffle()
 
     {:ok, {players, community_cards, button, deck}}
+
+    {:ok, :off, 0}
   end
 
-  def handle_call(_msg, _from, state) do
-    {:reply, :ok, state}
-  end
-
-  def handle_cast(_msg, state) do
-    {:noreply, state}
-  end
 
   @doc """
   Given a list of players deals them 2 hole cards each and returns a tuple
