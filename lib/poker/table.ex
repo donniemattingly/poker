@@ -77,6 +77,37 @@ defmodule Poker.Table do
   alias Poker.Hand
   alias Poker.Deck
 
+
+  def join_table(table, player) do
+    GenStateMachine.call(table, {:player_join, player})
+  end
+
+  def handle_event({:call, from}, {:player_join, player}, :waiting_for_players, data) do
+    {players, cards, positions_of_interest, config} = data
+    {all_players, in_hand} = players
+
+    max_players = config.table_size
+    num_players = all_players
+                  |> Map.to_list
+                  |> length
+
+
+    new_players = add_player_to_table(player, players)
+    next_state = case num_players do
+      0 -> :waiting_for_players
+      1 -> :hand_setup
+    end
+
+    new_data = {new_players, cards, positions_of_interest, config}
+    actions = [{:reply, from, {:joined_table, sanitize_table_state(new_data)}}]
+
+    {:next_state, next_state, new_data, actions}
+  end
+
+  def add_player_to_table(player, players) do
+    players
+  end
+
   def handle_event(:cast, :flip, :off, data) do
     {:next_state, :on, data + 1}
   end
@@ -107,25 +138,30 @@ defmodule Poker.Table do
     - :hand_complete
   """
   def init(opts) do
-    players = [
-      %{name: "p1", chips: 100, table_position: 0},
-      %{name: "p2", chips: 100, table_position: 1},
-      %{name: "p3", chips: 100, table_position: 2},
-      %{name: "p4", chips: 100, table_position: 3},
-      %{name: "p5", chips: 100, table_position: 4},
-      %{name: "p6", chips: 100, table_position: 5}
-    ]
-    |> Enum.map(fn(player) -> {player.name, player} end)
-    |> Map.new
-
-
-    community_cards = []
-    button = 0
+    community = []
+    muck = []
     deck = Poker.Deck.shuffle()
+    cards = {community, muck, deck}
 
-    {:ok, {players, community_cards, button, deck}}
+    button = nil
+    small_blind = nil
+    big_blind = nil
+    action = nil
+    positions_of_interest = {button, small_blind, big_blind, action}
 
-    {:ok, :off, 0}
+    all_players = %{}
+    in_hand = []
+    players = {all_players, in_hand}
+
+    config = %{
+      table_size: 6
+    }
+
+    data = {players, cards, positions_of_interest, config}
+
+    {:ok, :waiting_for_players, data}
+
+    #    {:ok, :off, 0}
   end
 
 
@@ -138,10 +174,10 @@ defmodule Poker.Table do
     community_cards = Enum.take(deck, 5)
 
     new_players = deck
-    |> Enum.chunk_every(2)
-    |> Enum.take(length(players))
-    |> Enum.zip(players)
-    |> Enum.map(fn({cards, player}) -> Map.put(player, :hole_cards, cards) end)
+                  |> Enum.chunk_every(2)
+                  |> Enum.take(length(players))
+                  |> Enum.zip(players)
+                  |> Enum.map(fn ({cards, player}) -> Map.put(player, :hole_cards, cards) end)
 
     {community_cards, new_players}
   end
@@ -153,14 +189,31 @@ defmodule Poker.Table do
   """
   def showdown(players_remaining, community_cards) do
     players_remaining
-    |> Enum.map(fn player ->
-      Map.put(player, :hand, player.hole_cards ++ community_cards)
-    end)
-    |> Enum.map(fn player ->
-      Map.put(player, :hand_score, Poker.Hand.score_hand(player.hand))
-    end)
-    |> Enum.sort(fn p1, p2 ->
-      Poker.Hand.compare_hand_score(p1.hand_score, p2.hand_score)
-    end)
+    |> Enum.map(
+         fn player ->
+           Map.put(player, :hand, player.hole_cards ++ community_cards)
+         end
+       )
+    |> Enum.map(
+         fn player ->
+           Map.put(player, :hand_score, Poker.Hand.score_hand(player.hand))
+         end
+       )
+    |> Enum.sort(
+         fn p1, p2 ->
+           Poker.Hand.compare_hand_score(p1.hand_score, p2.hand_score)
+         end
+       )
   end
+
+
+  @doc """
+  Some table state is privileged (cards remaining, pending actions, etc)
+  This function takes the game state and converts it into state that can
+  be sent to clients
+  """
+  def sanitize_table_state(table_state) do
+    {}
+  end
+
 end
