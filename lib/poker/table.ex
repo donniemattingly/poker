@@ -77,9 +77,23 @@ defmodule Poker.Table do
   alias Poker.Hand
   alias Poker.Deck
 
+  def get_state(table) do
+    result = :sys.get_status(table)
+    {_, _, {_, _}, [_, _, _, _, [_, _, data: data]]} = result
+    [{_, {state, _}}] = data
+    state
+  end
 
   def join_table(table, player) do
     GenStateMachine.call(table, {:player_join, player})
+  end
+
+  def start_table(config \\ nil) do
+    GenStateMachine.start_link(Poker.Table, config)
+  end
+
+  def table_info(table) do
+    GenStateMachine.call(table, :get_info)
   end
 
   def handle_event({:call, from}, {:player_join, player}, :waiting_for_players, data) do
@@ -92,7 +106,7 @@ defmodule Poker.Table do
                   |> length
 
 
-    new_players = add_player_to_table(player, players)
+    new_players = add_player_to_table(player, players, config.table_size)
     next_state = case num_players do
       0 -> :waiting_for_players
       1 -> :hand_setup
@@ -104,8 +118,35 @@ defmodule Poker.Table do
     {:next_state, next_state, new_data, actions}
   end
 
-  def add_player_to_table(player, players) do
-    players
+
+  @doc """
+  When you add a player to the table you must:
+    - add them to the map of players
+    - set their status to be :waiting_on_big_blind
+    - if the player has no seat selected, one will be randomly assigned
+  """
+  def add_player_to_table(player, {players, in_hand}, table_size) do
+    player_with_status = Map.put(player, :status, :waiting_for_big_blind)
+    position = case Map.get(player, :position) do
+      nil -> randomly_assign_position(player, players, table_size)
+      x -> x
+    end
+
+    player_with_position = Map.put(player_with_status, :position, position)
+    new_players = Map.put(players, player_with_position.name, player_with_position)
+
+    {new_players, in_hand}
+  end
+
+
+  @doc"""
+  position is 0 indexed
+  """
+  def randomly_assign_position(player, players, table_size) do
+    possible = 0..table_size - 1 |> MapSet.new
+    taken = players |> Enum.map(fn ({name, player}) -> player.position end) |> MapSet.new
+    remaining = MapSet.difference(possible, taken)
+    Enum.random(remaining)
   end
 
   def handle_event(:cast, :flip, :off, data) do
@@ -116,7 +157,7 @@ defmodule Poker.Table do
     {:next_state, :off, data}
   end
 
-  def handle_event({:call, from}, :get_count, state, data) do
+  def handle_event({:call, from}, :get_info, state, data) do
     {:next_state, state, data, [{:reply, from, data}]}
   end
 
@@ -138,6 +179,12 @@ defmodule Poker.Table do
     - :hand_complete
   """
   def init(opts) do
+
+    config = case opts do
+      nil -> %{table_size: 6}
+      x -> x
+    end
+
     community = []
     muck = []
     deck = Poker.Deck.shuffle()
@@ -152,10 +199,6 @@ defmodule Poker.Table do
     all_players = %{}
     in_hand = []
     players = {all_players, in_hand}
-
-    config = %{
-      table_size: 6
-    }
 
     data = {players, cards, positions_of_interest, config}
 
@@ -213,7 +256,7 @@ defmodule Poker.Table do
   be sent to clients
   """
   def sanitize_table_state(table_state) do
-    {}
+    table_state
   end
 
 end
