@@ -32,9 +32,10 @@ defmodule Poker.TableTest do
 
 
     Poker.Table.join_table(table, s1)
-    Poker.Table.join_table(table, s2)
+    assert Poker.Table.get_state(table) == :waiting_for_players
 
-    assert Poker.Table.get_state(table) == :hand_setup
+    Poker.Table.join_table(table, s2)
+    assert Poker.Table.get_state(table) != :waiting_for_players
   end
 
 end

@@ -73,12 +73,15 @@ defmodule Poker.Table do
   or a fold otherwise).
   """
   use GenStateMachine
+  require Logger
 
   alias Poker.Hand
   alias Poker.Deck
 
   def get_state(table) do
     result = :sys.get_status(table)
+
+    # crazy ass pattern due to this being a system process info dump
     {_, _, {_, _}, [_, _, _, _, [_, _, data: data]]} = result
     [{_, {state, _}}] = data
     state
@@ -94,6 +97,11 @@ defmodule Poker.Table do
 
   def table_info(table) do
     GenStateMachine.call(table, :get_info)
+  end
+
+  def handle_event(:internal, :init_hand, :hand_setup, data) do
+
+    {:next_state, :hand_setup, data}
   end
 
   def handle_event({:call, from}, {:player_join, player}, :waiting_for_players, data) do
@@ -113,7 +121,10 @@ defmodule Poker.Table do
     end
 
     new_data = {new_players, cards, positions_of_interest, config}
-    actions = [{:reply, from, {:joined_table, sanitize_table_state(new_data)}}]
+    actions = [
+      {:reply, from, {:joined_table, sanitize_table_state(new_data)}},
+      {:next_event,:internal, :init_hand}
+    ]
 
     {:next_state, next_state, new_data, actions}
   end
@@ -161,8 +172,7 @@ defmodule Poker.Table do
     {:next_state, state, data, [{:reply, from, data}]}
   end
 
-  def handle_event(_event_type, _event, state, data) do
-    IO.puts("Event")
+  def handle_event(event_type, event, state, data) do
     {:next_state, state, data}
   end
 
